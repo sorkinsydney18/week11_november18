@@ -63,11 +63,43 @@ As usual, let's take a closer look at the data.
 # Part a
 **What is the unit of observation in the `misinfo.combined` dataset? How is it different from the data we usually see from surveys?**
 
+The unit of observation is a respondent's answers to the survey conditional on whether they have been incentived to answer correctly or not. 
+
 # Part b
 **Create a bar plot of the main outcome of interest, the number of questions that were correctly answered by respondents. You will need to do some manipulation of the data before you can make this plot. What does this distribution tell you about factual political knowledge in the electorate?**
 
+```{r}
+misinfo.combined %>% 
+  filter(!is.na(correct.answer)) %>% 
+  select(correct.answer) %>% 
+  
+  
+  ggplot(aes(x = correct.answer)) +
+  geom_histogram(stat = "count") +
+  scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct"))
+```
+
+
+
 # Part c
 **Split the bar plot you made in part b by treatment status - that is, by whether or not the respondent received an incentive for responding correctly. In addition, conduct a test of difference in means between the unincentivized and incentivized conditions. Did the incentives increase correct answers? If so, is it a meaningful increase?**
+
+
+```{r}
+
+misinfo.combined %>% 
+  filter(!is.na(correct.answer)) %>%
+  
+  
+  ggplot(aes(x = correct.answer)) +
+  geom_histogram(stat = "count") +
+  scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct")) +
+  facet_wrap(~incentive)
+
+```
+
+
+
 
 # Question 2
 
@@ -79,19 +111,50 @@ While the data we just loaded has most of the main variables, it is missing the 
 
 load("combined.survey.demos.dea.RData")
 
+
+data <- misinfo.combined %>% 
+  left_join(combined.survey.demos, by = "caseid")
+
+
 ```
 
 ## Part b
 
 When merging (or joining; the two are used interchangeably) two datasets, it's always important to check that your merge worked correctly. One way to do that is to check that the number of rows in the new dataset is correct.  **Check that the number of rows in the new dataset is equal to the number of rows in the `x` dataset. If the number of rows differs, go back and check your merge.**
 
+
+
+
 ## Part c
 
 **Now check the number of columns in the resulting dataframe after the merge. Explain why the new merged dataset has that number of columns.**
 
+
+In the misinfo data set we had 18 variables, in the combined data we now have 26. This would be the additional 8 variables we addded from the y dataset, minus the shared "caseid" variable. 
+
 # Question 3
 
 Now that we've merged in the data, let's see if some people are better at answering these factual questions than others. Choose one or more demographic variables that you think might influence correctness on the misinformation items and formulate a hypothesis about how they will be related. You can also consider whether some people will answer some types of questions more accurately than others (e.g. economic vs. social/cultural issues). Perform whatever analyses you think are appropriate to investigate your hypothesized relationship.
+
+
+```{r}
+data %>% 
+  filter(female == 1) %>% 
+  ggplot(aes(correct.answer)) +
+  geom_histogram(stat = "count") +
+  facet_wrap(~incentive) +
+  scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct")) +
+  labs(title = "Treatment Affect of Female Respondents")
+
+data %>% 
+  filter(female == 0) %>% 
+  ggplot(aes(correct.answer)) +
+  geom_histogram(stat = "count") +
+  facet_wrap(~incentive) +
+  scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct")) +
+  labs(title = "Treatment Affect of Male Respondents")
+
+```
 
 
 # Question 4
