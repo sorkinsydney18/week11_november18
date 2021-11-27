@@ -71,14 +71,26 @@ The unit of observation is a respondent's answers to the survey conditional on w
 ```{r}
 misinfo.combined %>% 
   filter(!is.na(correct.answer)) %>% 
-  select(correct.answer) %>% 
+  select(topic, correct.answer) %>% 
   
   
   ggplot(aes(x = correct.answer)) +
   geom_histogram(stat = "count") +
   scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct"))
-```
 
+misinfo.combined %>% 
+  filter(!is.na(correct.answer)) %>% 
+  select(topic, correct.answer) %>% 
+  
+  
+  ggplot(aes(x = topic, y = correct.answer)) +
+  geom_histogram(stat = "identity") +
+  coord_flip()
+
+
+
+  
+```
 
 
 # Part c
@@ -95,6 +107,10 @@ misinfo.combined %>%
   geom_histogram(stat = "count") +
   scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct")) +
   facet_wrap(~incentive)
+
+
+difference_in_means(correct.answer ~ incentive, data = misinfo.combined)
+
 
 ```
 
@@ -135,6 +151,11 @@ In the misinfo data set we had 18 variables, in the combined data we now have 26
 # Question 3
 
 Now that we've merged in the data, let's see if some people are better at answering these factual questions than others. Choose one or more demographic variables that you think might influence correctness on the misinformation items and formulate a hypothesis about how they will be related. You can also consider whether some people will answer some types of questions more accurately than others (e.g. economic vs. social/cultural issues). Perform whatever analyses you think are appropriate to investigate your hypothesized relationship.
+
+
+analyze pid.strength - hypothesis: stronger the partisan the more affected by the partisan valence, less likely to seek outside source to inform correct answer, more entrenched in their opinion 
+
+education level could be affected by partisan level though
 
 
 ```{r}
