@@ -98,7 +98,7 @@ misinfo.combined %>%
 **Split the bar plot you made in part b by treatment status - that is, by whether or not the respondent received an incentive for responding correctly. In addition, conduct a test of difference in means between the unincentivized and incentivized conditions. Did the incentives increase correct answers? If so, is it a meaningful increase?**
 
 
-```{r}
+```{r, warning=FALSE}
 
 misinfo.combined %>% 
   filter(!is.na(correct.answer)) %>%
@@ -113,6 +113,7 @@ misinfo.combined %>%
 
 
 difference_in_means(correct.answer ~ incentive, data = misinfo.combined)
+
 cohen.d(correct.answer ~ incentive, data = misinfo.combined)
 
 
@@ -174,6 +175,7 @@ non_college <- data %>%
   filter(college == 0)
 
 difference_in_means(correct.answer ~ incentive, data = college)
+
 difference_in_means(correct.answer ~ incentive, data = non_college)
 
 ```
@@ -217,6 +219,7 @@ Do partisans gravitate towards different types of sources of information? Here w
 ```{r}
 
 news_source <- data %>%
+  filter(incentive == 0) %>% 
   filter(!is.na(copartisan.news.choice),
          !is.na(outpartisan.news.choice),
          !is.na(expert.source),
@@ -229,6 +232,7 @@ news_source <- data %>%
 #prop news choice by topic
 
 data %>%
+  filter(incentive == 0) %>% 
   filter(!is.na(copartisan.news.choice),
          !is.na(outpartisan.news.choice),
          !is.na(expert.source),
@@ -253,6 +257,7 @@ Does strength of party ID matter for which sources respondents chose? **Find the
 
 #partisan strength
 data %>%
+  filter(incentive == 0) %>% 
   filter(!is.na(copartisan.news.choice),
          !is.na(outpartisan.news.choice),
          !is.na(expert.source),
@@ -278,6 +283,26 @@ $$
 \text{divide.coding} \sim \text{pid.binary}
 \end{aligned}
 $$
+
+
+```{r}
+incentive <-
+  data %>% 
+  filter(incentive == 1)
+
+unincentive <-
+  data %>% 
+  filter(incentive == 0)
+
+summary(lm(divide.coding ~ pid.binary, data = incentive))
+
+summary(lm(divide.coding ~ pid.binary, data = unincentive))
+
+```
+
+
+
+
 
 Be sure to take a close look at the way `divide.coding` is constructed and interpret your results carefully. **Data science students can extend this question by fitting the model with an interaction between `pid.binary` and `incentive` among all respondents.**
 
