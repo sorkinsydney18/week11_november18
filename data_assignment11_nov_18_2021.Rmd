@@ -19,6 +19,7 @@ library(lmtest)
 library(sandwich)
 library(estimatr)
 library(stargazer)
+library(psych)
 ```
 
 This week we examined patterns of media consumption (Barbera et al. 2015) as well as the effects of media exposure on political atttidues (Iyengar and Kindar 1987; Moehler and Conroy-Krutz 2016; Asimovic 2021). In this Data Exploration Assignment, we will look more closely at patterns of media consumption as a way to gather information. In their 2020 paper "Partisan Gaps in Political Information and Information-Seeking Behavior: Motivated Reasoning or Cheerleading?", Peterson and Iyengar seek to understand whether partisan gaps in political knowledge (like, for example, on the established fact that humans drive climate change) are the result of genuine differences in beliefs or merely partisan cheerleading. 
@@ -106,10 +107,13 @@ misinfo.combined %>%
   ggplot(aes(x = correct.answer)) +
   geom_histogram(stat = "count") +
   scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct")) +
-  facet_wrap(~incentive)
+  facet_wrap(~incentive) +
+  labs(title = "Treatment Effect",
+       subtitle = "0 is unincentived, 1 is incentivized")
 
 
 difference_in_means(correct.answer ~ incentive, data = misinfo.combined)
+cohen.d(correct.answer ~ incentive, data = misinfo.combined)
 
 
 ```
@@ -153,27 +157,24 @@ In the misinfo data set we had 18 variables, in the combined data we now have 26
 Now that we've merged in the data, let's see if some people are better at answering these factual questions than others. Choose one or more demographic variables that you think might influence correctness on the misinformation items and formulate a hypothesis about how they will be related. You can also consider whether some people will answer some types of questions more accurately than others (e.g. economic vs. social/cultural issues). Perform whatever analyses you think are appropriate to investigate your hypothesized relationship.
 
 
-analyze pid.strength - hypothesis: stronger the partisan the more affected by the partisan valence, less likely to seek outside source to inform correct answer, more entrenched in their opinion 
+demo group: college educated
+hypothesis: college educated more likely to get answers correct 
 
-education level could be affected by partisan level though
 
+statistically significant difference between college demo - college demo more accurate at answering questions 
+College educated people tend to be in elite category of partisans - more aware of political happenings, more likely to follow political news (may be more partisan), culturally more in-tune with politics - surrounded by more politically engaged institutions (college, family, workforce)
 
 ```{r}
-data %>% 
-  filter(female == 1) %>% 
-  ggplot(aes(correct.answer)) +
-  geom_histogram(stat = "count") +
-  facet_wrap(~incentive) +
-  scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct")) +
-  labs(title = "Treatment Affect of Female Respondents")
+#college only
 
-data %>% 
-  filter(female == 0) %>% 
-  ggplot(aes(correct.answer)) +
-  geom_histogram(stat = "count") +
-  facet_wrap(~incentive) +
-  scale_x_continuous(breaks = c(0, .5, 1), labels = c("Incorrect", "", "Correct")) +
-  labs(title = "Treatment Affect of Male Respondents")
+college <- data %>% 
+  filter(college == 1)
+
+non_college <- data %>% 
+  filter(college == 0)
+
+difference_in_means(correct.answer ~ incentive, data = college)
+difference_in_means(correct.answer ~ incentive, data = non_college)
 
 ```
 
@@ -186,18 +187,87 @@ Now let's look at whether there is in fact a partisan divide in how partisans an
 
 **Why were the authors of the study interested in the effect of incentives on partisan information divides? What are the two competing explanations of the partisan information divide that they are trying to distinguish between?**
 
+The authors add incentives to tease out whether informational divides between partisans is truly a knowledge gap due to motiviated reasoning or the effect of partisan cheerleading. The hope is that incentives will cancel out the effect of partisan cheerleading - where partisans know the correct answer but choose an incorrect answer to align with party views. If incentives have little effect on answer accuracy then it would be strong evidence for partisan divide based on motivated reasoning. 
+
+
 ## Part b
 
 **Among individuals who did not receive incentives for correct answers, report the proportion of Democrats and Republicans who answered each question correctly, as well as the absolute difference between the two. That is, for each question, report the proportion of Democrats who answered correctly alongside the proportion of Republicans who answered correctly, and the absolute value of the difference between them (which corresponds to the partisan divide).**
+
+
+```{r}
+
+partisan_divide <- misinfo.combined %>%
+  filter(incentive == 0,
+         !is.na(correct.answer)) %>%
+  group_by(pid.binary) %>% 
+  summarise(prop.correct = sum(correct.answer)/n())
+
+
+```
+
 
 
 ## Part c
 
 Do partisans gravitate towards different types of sources of information? Here we'll see if respondents in the survey tend to choose sources that conform to their prior beliefs. **Find the proportion of respondents who chose copartisan, outpartisan, expert, and mainstream sources for each topic. Do some of the topics inspire different choices of source when looking for information?**
 
+
+
+```{r}
+
+news_source <- data %>%
+  filter(!is.na(copartisan.news.choice),
+         !is.na(outpartisan.news.choice),
+         !is.na(expert.source),
+         !is.na(mainstream.source)) %>% 
+  summarise(prop_copartisan = sum(copartisan.news.choice)/n(),
+            prop_outpartisan = sum(outpartisan.news.choice)/n(),
+            prop_expert = sum(expert.source)/n(),
+            prop_mainstream = sum(mainstream.source)/n())
+
+#prop news choice by topic
+
+data %>%
+  filter(!is.na(copartisan.news.choice),
+         !is.na(outpartisan.news.choice),
+         !is.na(expert.source),
+         !is.na(mainstream.source)) %>% 
+  
+  #group by topic
+  group_by(topic) %>% 
+  summarise(prop_copartisan = sum(copartisan.news.choice)/n(),
+            prop_outpartisan = sum(outpartisan.news.choice)/n(),
+            prop_expert = sum(expert.source)/n(),
+            prop_mainstream = sum(mainstream.source)/n())
+
+
+```
+
+
 ## Part d
 
 Does strength of party ID matter for which sources respondents chose? **Find the proportion of strong vs. weak partisans who chose each type of source (copartisan, outpartisan, expert, mainstream), regardless of topic. What do you see? Is this what you would expect?**
+
+```{r}
+
+#partisan strength
+data %>%
+  filter(!is.na(copartisan.news.choice),
+         !is.na(outpartisan.news.choice),
+         !is.na(expert.source),
+         !is.na(mainstream.source)) %>% 
+  group_by(pid.strength) %>% 
+  summarise(prop_copartisan = sum(copartisan.news.choice)/n(),
+            prop_outpartisan = sum(outpartisan.news.choice)/n(),
+            prop_expert = sum(expert.source)/n(),
+            prop_mainstream = sum(mainstream.source)/n())
+
+
+
+
+```
+
 
 # Question 5
 
